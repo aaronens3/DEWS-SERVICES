@@ -1,0 +1,2 @@
+ARG MARIADB_VERSION
+FROM docker.io/bitnami/mariadb:${MARIADB_VERSION}
