@@ -1,0 +1,15 @@
+#######################################################
+# servicios a arrancar / services to be started up
+########################################################
+
+# servicios disponibles / available services:
+
+# Array de servicios
+SERVICES=(
+  "php"
+  "apache"
+  "mariadb"
+  "phpmyadmin"
+  "mongo"
+  "mongo-express"
+)
