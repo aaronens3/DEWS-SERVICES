@@ -1,1 +1,1 @@
-mongorestore --out /docker-entrypoint-initdb.d/db-dump
+mongorestore ./docker-entrypoint-initdb.d/db-dump

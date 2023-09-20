@@ -36,6 +36,8 @@ services:
       context: ./mariadb
       args:
         - MARIADB_VERSION=${MARIADB_VERSION}
+        - MARIADB_USER=${MARIADB_USER}
+        - MARIADB_PASSWORD=${MARIADB_PASSWORD}
         
     environment:
       - ALLOW_EMPTY_PASSWORD=${MARIADB_ALLOW_EMPTY_PASSWORD}
