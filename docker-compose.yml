@@ -2,13 +2,7 @@ version: "3.8"
 
 # Volumes
 volumes:
-  mariadb_data:
-    driver: local
-    driver_opts:
-      type: 'none'
-      o: 'bind'
-      device: ${SERVER_PATH}/mariadb/
-      
+       
   www:
     driver: local
     driver_opts:
@@ -48,12 +42,12 @@ services:
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
       - MARIADB_PASSWORD=${MARIADB_PASSWORD}
       - MARIADB_USER=${MARIADB_USER}
-      - MARIADB_DATABASE=${MARIADB_DATABASE}
       - MARIADB_CHARACTER_SET=${MARIADB_CHARACTER_SET}
       - MARIADB_COLLATE=${MARIADB_COLLATE}
 
     volumes:
-      - 'mariadb_data:/bitnami/mariadb'
+      - "./mariadb/mariarestore.sh:/docker-entrypoint-initdb.d/mariarestore.sh"
+      - "./mariadb/db-dump:/docker-entrypoint-initdb.d/db-dump"
 
   # phpMyAdmin Service
   phpmyadmin:
@@ -76,8 +70,8 @@ services:
     ports:
       - ${MONGO_PORT}:27017
     volumes:
-      - "./mongodb/db/:/data/db"
-      - "./mongodb/configdb/:/data/configdb"
+      - "./mongodb/mongorestore.sh:/docker-entrypoint-initdb.d/mongorestore.sh"
+      - "./mongodb/db-dump:/docker-entrypoint-initdb.d/db-dump"
 
   # Mongo Express Service
   mongo-express:

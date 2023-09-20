@@ -1,0 +1,1 @@
+mysql -u "${MARIADB_USER}" -p"${MARIADB_PASSWORD}" < /docker-entrypoint-initdb.d/db-dump/mariadb-dump.sql
