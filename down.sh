@@ -10,7 +10,7 @@ then
   docker-compose exec mariadb mysqldump -u root -p"${MARIADB_ROOT_PASSWORD}" --all-databases > ./mariadb/db-dump/mariadb-dump.sql
   # Ejecuta el stash push para guardar los cambios
   echo "Git stash realizado." 
-  #git stash push -u
+  git stash push -u
 fi
 # Ejecuta el docker compose down para parar y borrar los contenedores
 exec docker compose down -v
