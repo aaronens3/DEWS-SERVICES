@@ -10,6 +10,6 @@ SERVICES=(
   "apache"
   "mariadb"
   "phpmyadmin"
-  "mongo"
+  "mongodb"
   "mongo-express"
 )
