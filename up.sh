@@ -34,9 +34,11 @@ update_repository() {
     cd - || return
   else
     # Si no existe, clona el repositorio con nombre de usuario y contraseña
-    local encoded_username="$(printf %s "$GITHUB_USER" | sed 's/[@.]/%2/g')"
-    local encoded_password="$(printf %s "$GITHUB_PASSWORD" | sed 's/[@.]/%2/g')"
-    local repo_url_with_auth="https://${encoded_username}:${encoded_password}@${repo_url}"
+    local encoded_username="$(printf %s "$GITHUB_USER" | sed 's/@/%40/g')"
+    local encoded_password="$(printf %s "$GITHUB_PASSWORD" | sed 's/@/%40/g')"
+    local repo_url_with_auth="https://${encoded_username}:${encoded_password}@${repo_url#https://}"
+    echo "Encoded Password: $repo_url_with_auth"
+
     echo "Clonando el repositorio $repo_name desde $repo_url."
     git clone "$repo_url_with_auth" "$repo_path"
   fi
