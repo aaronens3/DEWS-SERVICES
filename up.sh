@@ -35,8 +35,6 @@ update_repository() {
   else
     # Si no existe, clona el repositorio con nombre de usuario y contraseña
     local repo_url_with_auth="https://${GITHUB_TOKEN}@${repo_url#https://}"
-    echo "url: $repo_url_with_auth"
-
     echo "Clonando el repositorio $repo_name desde $repo_url."
     git clone "$repo_url_with_auth" "$repo_path"
   fi
