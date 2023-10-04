@@ -19,10 +19,14 @@ services:
         - PHP_VERSION=${PHP_VERSION}
     volumes:
       - "www:/var/www/html"
+      - ./php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./php/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
 
   # Apache Service
   apache:
     build: './apache/'
+    environment:
+        XDEBUG_CONFIG: remote_host=host.docker.internal remote_port=9003 remote_enable=1
     depends_on:
       - php
     ports:
