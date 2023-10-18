@@ -8,7 +8,8 @@ set -o allexport && source ./.env && source ./.services && set +o allexport
 # Función para leer las URL de los repositorios desde .repositories
 read_repositories() {
   if [ -f ./.repositories ]; then
-    mapfile -t REPO_URLS < ./.repositories
+    # Incluye el archivo .repositories en el script para cargar el array REPOSITORIES
+    source ./.repositories
   else
     echo -e "\033[0;31m[ERROR]\033[0m No existe el fichero .repositories. Saliendo.."
     exit 1
@@ -52,7 +53,7 @@ git stash drop
 read_repositories
 
 # Itera sobre las URLs de los repositorios y actualiza cada uno
-for repo_url in "${REPO_URLS[@]}"; do
+for repo_url in "${REPOSITORIES[@]}"; do
   update_repository "$repo_url"
 done
 
