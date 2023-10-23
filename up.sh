@@ -1,60 +1,43 @@
 #!/bin/bash
-# Comprueba si existe el fichero .env y .services
-test ! -f ./.env && { echo -e "\033[0;31m[ERROR]\033[0m No existe el fichero .env. Saliendo.." ; exit; }
-test ! -f ./.services && { echo -e "\033[0;31m[ERROR]\033[0m No existe el fichero .services. Saliendo.." ; exit; }
-# Carga las variables de entorno del fichero .env
-set -o allexport && source ./.env && source ./.services && set +o allexport
 
-# Función para leer las URL de los repositorios desde .repositories
-read_repositories() {
-  if [ -f ./.repositories ]; then
-    # Incluye el archivo .repositories en el script para cargar el array REPOSITORIES
-    source ./.repositories
-  else
-    echo -e "\033[0;31m[ERROR]\033[0m No existe el fichero .repositories. Saliendo.."
-    exit 1
-  fi
+# Función para mostrar mensajes de error y salir
+error_exit() {
+  echo -e "\033[0;31m[ERROR]\033[0m $1. Saliendo.."
+  exit 1
 }
 
-# Función para verificar si un repositorio existe y realizar un git pull o git clone
-update_repository() {
+# Función para clonar o actualizar un repositorio
+clone_or_update_repository() {
   local repo_url="$1"
-  local repo_name="${repo_url##*/}"  # Obtiene la última parte de la URL como nombre del repositorio
-  local repo_name="${repo_name%.git}" # Elimina ".git" de la última parte
+  local repo_name=$(basename "$repo_url" .git)
+  local repo_path="$SERVER_PATH/www/$repo_name"
 
-  local repo_path="${SERVER_PATH}/www/${repo_name}"
-
-  if [ -d "$repo_path/.git" ]; then
-    # Muestra un mensaje de pull
-    echo "Git Pull realizado en $repo_name." 
-    # Ejecuta el pull rebase para actualizar el repositorio
-    cd "$repo_path" || return
-    git pull --rebase
-    git stash pop
-    git stash drop
-    cd - || return
+  if [ -d "$repo_path" ]; then
+    echo "Actualizando el repositorio $repo_name desde $repo_url."
+    (cd "$repo_path" && git pull --rebase)
   else
-    # Si no existe, clona el repositorio con nombre de usuario y contraseña
-    local repo_url_with_auth="https://${GITHUB_TOKEN}@${repo_url#https://}"
     echo "Clonando el repositorio $repo_name desde $repo_url."
-    git clone "$repo_url_with_auth" "$repo_path"
+    git clone "$repo_url" "$repo_path"
   fi
 }
 
-# Muestra un mensaje de pull
-echo "Git Pull realizado." 
-# Ejecuta el pull rebase para actualizar el repositorio
-git pull --rebase 
-# Ejecuta el stash pop y drop para actualizar y eliminar los cambios locales
-git stash pop
-git stash drop
+# Verificar si existen .env, .services y .repositories
+for file in .env .services .repositories; do
+  [ -f "./$file" ] || error_exit "No existe el archivo $file"
+done
 
-# Lee las URLs de los repositorios desde .repositories
-read_repositories
+# Cargar variables de entorno
+set -o allexport
+source ./.env
+source ./.services
+source ./.repositories
+set +o allexport
 
-# Itera sobre las URLs de los repositorios y actualiza cada uno
+# Loop para recorrer los repositorios
 for repo_url in "${REPOSITORIES[@]}"; do
-  update_repository "$repo_url"
+  clone_or_update_repository "$repo_url"
+  repo_name=$(basename "$repo_url" .git)
+  repo_path="$SERVER_PATH/www/$repo_name"
 done
 
 # Ejecuta el docker compose
