@@ -29,7 +29,7 @@ set -o allexport && source ./.env && set +o allexport
 # Comprobar si hay cambios en el repositorio principal
 if git status --porcelain | grep -q .; then
   docker-compose exec -T "$MONGO_SERVER" mongodump --out ./docker-entrypoint-initdb.d/db-dump -u "$MONGO_USER" -p "$MONGO_PASS" --authenticationDatabase admin
-  docker-compose exec mariadb mysqldump -u root -p"$MARIADB_ROOT_PASS" --all-databases > ./mariadb/db-dump/mariadb-dump.sql
+  docker-compose exec mariadb mysqldump -u root -p"$MARIADB_ROOT_PASSWORD" --all-databases > ./mariadb/db-dump/mariadb-dump.sql
   # Ejecuta el stash push para guardar los cambios
   echo "Git stash realizado en el repositorio principal." 
   git stash push -u
