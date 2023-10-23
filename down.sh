@@ -23,8 +23,8 @@ function ejecutar_stash_push() {
 }
 
 # Cargar variables de entorno desde el archivo .env
-comprobar_archivo .env
-set -o allexport && source .env && set +o allexport
+comprobar_archivo ./.env
+set -o allexport && source ./.env && set +o allexport
 
 # Comprobar si hay cambios en el repositorio principal
 if git status --porcelain | grep -q .; then
