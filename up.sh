@@ -6,18 +6,30 @@ error_exit() {
   exit 1
 }
 
-# Función para clonar o actualizar un repositorio
-clone_or_update_repository() {
+# Función para obtener las variables de un repositorio
+get_repo_vars() {
   local repo_url="$1"
   local repo_name=$(basename "$repo_url" .git)
   local repo_path="$SERVER_PATH/www/$repo_name"
+  local repo_vars=("$repo_name" "$repo_url" "$repo_path")
+  echo "${repo_vars[@]}"
+}
+
+# Función para clonar o actualizar un repositorio
+clone_or_update_repository() {
+  local repo_name="${repo_info[0]}"
+  local repo_url="${repo_info[1]}"
+  local repo_path="${repo_info[2]}"
 
   if [ -d "$repo_path" ]; then
     echo "Actualizando el repositorio $repo_name desde $repo_url."
-    (cd "$repo_path" && git pull --rebase)
+    # Ejecuta el pull rebase para actualizar el repositorio
+    (cd "$repo_path" && git pull --rebase && git stash pop && git stash drop)
   else
+    # Si no existe, clona el repositorio con nombre de usuario y contraseña
+    local repo_url_with_auth="https://${GITHUB_TOKEN}@${repo_url#https://}"
     echo "Clonando el repositorio $repo_name desde $repo_url."
-    git clone "$repo_url" "$repo_path"
+    git clone "$repo_url_with_auth" "$repo_path"
   fi
 }
 
@@ -32,12 +44,11 @@ source ./.env
 source ./.services
 source ./.repositories
 set +o allexport
-
+repo_info=()
 # Loop para recorrer los repositorios
 for repo_url in "${REPOSITORIES[@]}"; do
-  clone_or_update_repository "$repo_url"
-  repo_name=$(basename "$repo_url" .git)
-  repo_path="$SERVER_PATH/www/$repo_name"
+  repo_info=($(get_repo_vars "$repo_url"))
+  clone_or_update_repository
 done
 
 # Ejecuta el docker compose
