@@ -15,6 +15,15 @@ get_repo_vars() {
   echo "${repo_vars[@]}"
 }
 
+# Función para crear una red personalizada
+create_custom_network() {
+  local network_name="$1"
+  if ! docker network inspect "$network_name" &> /dev/null; then
+    echo "Creando la red personalizada $network_name."
+    docker network create "$network_name"
+  fi
+}
+
 # Función para clonar o actualizar un repositorio
 clone_or_update_repository() {
   local repo_name="${repo_info[0]}"
@@ -43,7 +52,7 @@ find_and_up_docker_compose() {
       error_exit "La variable APP_PORT no está definida en .env"
     fi
     # Incrementar el puerto en el archivo .env principal
-    (($APP_PORT++))
+    APP_PORT=$((APP_PORT + 1))
     sed -i "s/APP_PORT=.*/APP_PORT=$APP_PORT/" $repo_path/.env
 
     echo "Ejecutando docker-compose up en $docker_compose_file."
@@ -63,6 +72,10 @@ source ./.services
 source ./.repositories
 set +o allexport
 repo_info=()
+
+# Crear una red personalizada
+create_custom_network "$NETWORK"
+
 # Loop para recorrer los repositorios
 for repo_url in "${REPOSITORIES[@]}"; do
   repo_info=($(get_repo_vars "$repo_url"))
