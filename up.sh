@@ -15,6 +15,15 @@ get_repo_vars() {
   echo "${repo_vars[@]}"
 }
 
+# Función para crear una red personalizada
+create_custom_network() {
+  local network_name="$1"
+  if ! docker network inspect "$network_name" &> /dev/null; then
+    echo "Creando la red personalizada $network_name."
+    docker network create "$network_name"
+  fi
+}
+
 # Función para clonar o actualizar un repositorio
 clone_or_update_repository() {
   local repo_name="${repo_info[0]}"
@@ -33,6 +42,24 @@ clone_or_update_repository() {
   fi
 }
 
+# Función para buscar archivos docker-compose.yml en los directorios y ejecutar docker-compose up si se encuentra
+find_and_up_docker_compose() {
+  local repo_path="${repo_info[2]}"
+  local docker_compose_file="$repo_path/docker-compose.yml"
+  
+  if [ -f "$docker_compose_file" ]; then
+    if [ -z "$APP_PORT" ]; then
+      error_exit "La variable APP_PORT no está definida en .env"
+    fi
+    # Incrementar el puerto en el archivo .env principal
+    APP_PORT=$((APP_PORT + 1))
+    sed -i "s/APP_PORT=.*/APP_PORT=$APP_PORT/" $repo_path/.env
+
+    echo "Ejecutando docker-compose up en $docker_compose_file."
+    (cd "$repo_path" && docker-compose up -d)
+  fi
+}
+
 # Verificar si existen .env, .services y .repositories
 for file in .env .services .repositories; do
   [ -f "./$file" ] || error_exit "No existe el archivo $file"
@@ -45,10 +72,15 @@ source ./.services
 source ./.repositories
 set +o allexport
 repo_info=()
+
+# Crear una red personalizada
+create_custom_network "$NETWORK"
+
 # Loop para recorrer los repositorios
 for repo_url in "${REPOSITORIES[@]}"; do
   repo_info=($(get_repo_vars "$repo_url"))
   clone_or_update_repository
+  find_and_up_docker_compose
 done
 
 # Ejecuta el docker compose
