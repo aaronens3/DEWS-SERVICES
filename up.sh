@@ -39,6 +39,11 @@ clone_or_update_repository() {
     local repo_url_with_auth="https://${GITHUB_TOKEN}@${repo_url#https://}"
     echo "Clonando el repositorio $repo_name desde $repo_url."
     git clone "$repo_url_with_auth" "$repo_path"
+    # Verificar si existe .env.example y copiarlo a .env
+    if [ -f "$repo_path/.env.example" ]; then
+      echo "Copiando .env.example a .env en $repo_path."
+      cp "$repo_path/.env.example" "$repo_path/.env"
+    fi
   fi
 }
 
@@ -57,6 +62,7 @@ find_and_up_docker_compose() {
 
     echo "Ejecutando docker-compose up en $docker_compose_file."
     (cd "$repo_path" && docker-compose up -d)
+
   fi
 }
 
@@ -71,10 +77,13 @@ source ./.env
 source ./.services
 source ./.repositories
 set +o allexport
-repo_info=()
 
 # Crear una red personalizada
 create_custom_network "$NETWORK"
+
+# Ejecuta el docker compose
+echo -e "\033[0;32m[INFO]\033[0m Arrancando los servicios: ${SERVICES[@]}"
+docker compose up -d "$@" "${SERVICES[@]}"
 
 # Loop para recorrer los repositorios
 for repo_url in "${REPOSITORIES[@]}"; do
@@ -83,6 +92,3 @@ for repo_url in "${REPOSITORIES[@]}"; do
   find_and_up_docker_compose
 done
 
-# Ejecuta el docker compose
-echo -e "\033[0;32m[INFO]\033[0m Arrancando los servicios: ${SERVICES[@]}"
-exec docker compose up -d "$@" "${SERVICES[@]}"
