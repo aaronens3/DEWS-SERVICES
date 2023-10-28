@@ -58,11 +58,37 @@ find_and_up_docker_compose() {
     fi
     # Incrementar el puerto en el archivo .env principal
     APP_PORT=$((APP_PORT + 1))
-    sed -i "s/APP_PORT=.*/APP_PORT=$APP_PORT/" $repo_path/.env
-
-    echo "Ejecutando docker-compose up en $docker_compose_file."
-    (cd "$repo_path" && docker-compose up -d)
-
+    # Verificar si APP_PORT está definido en el archivo .env
+    if grep -q "APP_PORT=" $repo_path/.env; then
+      # APP_PORT existe, actualizar su valor
+      sed -i "s/APP_PORT=.*/APP_PORT=$APP_PORT/" $repo_path/.env
+    else
+      # APP_PORT no existe, agregarlo con el valor predeterminado
+      echo "APP_PORT=$APP_PORT" >> $repo_path/.env
+    fi
+    if grep -q "APP_NAME=" $repo_path/.env; then
+      sed -i "s/APP_NAME=.*/APP_NAME=${repo_info[0]}/" $repo_path/.env
+    else
+      echo "APP_NAME=${repo_info[0]}" >> $repo_path/.env
+    fi
+    if grep -q "NETWORK=" $repo_path/.env; then
+      sed -i "s/NETWORK=.*/NETWORK=$NETWORK/" $repo_path/.env
+    else
+      echo "NETWORK=$NETWORK" >> $repo_path/.env
+    fi
+    # Comprobar si existe un archivo composer.json en el repositorio
+    if [ -f "${repo_path}/composer.json" ]; then
+      # Comprobar si existe el directorio "vendor"
+      if [ ! -d "${repo_path}/vendor" ]; then
+        echo "El directorio vendor no existe. Ejecutando composer install."
+        # Ejecutar composer install
+        (cd "${repo_path}" && docker-compose run composer install)
+      fi
+    else
+      # Ejecutar docker-compose up
+      echo "Ejecutando docker-compose up en $docker_compose_file."
+      (cd "$repo_path" && docker-compose up -d)
+    fi
   fi
 }
 
@@ -88,7 +114,7 @@ docker compose up -d "$@" "${SERVICES[@]}"
 # Loop para recorrer los repositorios
 for repo_url in "${REPOSITORIES[@]}"; do
   repo_info=($(get_repo_vars "$repo_url"))
-  clone_or_update_repository
+  clone_or_update_repository  
   find_and_up_docker_compose
 done
 
