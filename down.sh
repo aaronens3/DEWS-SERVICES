@@ -22,6 +22,16 @@ function ejecutar_stash_push() {
   fi
 }
 
+function repo_down() {
+  local carpeta="$1"
+  if [ -f "$carpeta/docker-compose.yml" ]; then
+    if [ -n "$(docker ps -q --filter name="${carpeta}")" ]; then
+      echo "Ejecutando sail down en $carpeta."
+      (cd "$carpeta" && docker compose down -v)
+    fi
+  fi
+}
+
 # Cargar variables de entorno desde el archivo .env
 comprobar_archivo ./.env
 set -o allexport && source ./.env && set +o allexport
@@ -35,6 +45,7 @@ if git status --porcelain | grep -q .; then
   git stash push -u
   for carpeta in "${SERVER_PATH}/www/"*; do
     ejecutar_stash_push "$carpeta"
+    repo_down "$carpeta"
   done
 fi
 # Ejecuta el docker compose down para parar y borrar los contenedores

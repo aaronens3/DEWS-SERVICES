@@ -12,5 +12,4 @@ SERVICES=(
   "phpmyadmin"
   "mongodb"
   "mongo-express"
-  "composer"
 )
