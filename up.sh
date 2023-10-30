@@ -115,6 +115,6 @@ docker compose up -d "$@" "${SERVICES[@]}"
 for repo_url in "${REPOSITORIES[@]}"; do
   repo_info=($(get_repo_vars "$repo_url"))
   clone_or_update_repository  
-  find_and_up_docker_compose
+  #find_and_up_docker_compose
 done
 
