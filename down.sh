@@ -25,10 +25,8 @@ function ejecutar_stash_push() {
 function repo_down() {
   local carpeta="$1"
   if [ -f "$carpeta/docker-compose.yml" ]; then
-    if [ -n "$(docker ps -q --filter name="${carpeta}")" ]; then
-      echo "Ejecutando sail down en $carpeta."
-      (cd "$carpeta" && docker compose down -v)
-    fi
+    echo "Ejecutando sail down en $carpeta."
+    (cd "$carpeta" && docker compose down -v)
   fi
 }
 
