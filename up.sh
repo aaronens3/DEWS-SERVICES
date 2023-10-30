@@ -83,11 +83,6 @@ find_and_up_docker_compose() {
         echo "El directorio vendor no existe. Ejecutando composer install."
         # Ejecutar composer install
         (cd "${repo_path}" && docker-compose run --rm composer install)
-        if [ -z "$APP_KEY" ]; then
-          echo "La variable APP_KEY en .env no está definida. Generando una nueva clave de aplicación..."
-          (cd "${repo_path}" && docker-compose exec php artisan key:generate)
-          echo "Se ha generado una nueva clave de aplicación. $APP_KEY"
-        fi
       fi
     else
       # Ejecutar docker-compose up
