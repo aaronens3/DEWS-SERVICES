@@ -6,6 +6,5 @@
 
 # Array de repositorios
 REPOSITORIES=(
-  "https://github.com/public-apis/public-apis.git"
   "https://github.com/23-24-DWES/HelloWorld.git"
 )
