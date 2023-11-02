@@ -40,10 +40,10 @@ clone_or_update_repository() {
     echo "Clonando el repositorio $repo_name desde $repo_url."
     git clone "$repo_url_with_auth" "$repo_path"
     # Verificar si existe .env.example y copiarlo a .env
-    if [ -f "$repo_path/.env.example" ]; then
-      echo "Copiando .env.example a .env en $repo_path."
-      cp "$repo_path/.env.example" "$repo_path/.env"
-    fi
+  fi
+  if [ -f "$repo_path/.env.example" ] && [ ! -f "$repo_path/.env" ]; then
+    echo "Copiando .env.example a .env en $repo_path."
+    cp "$repo_path/.env.example" "$repo_path/.env"
   fi
 }
 
@@ -58,13 +58,16 @@ find_and_up_docker_compose() {
     fi
     # Incrementar el puerto en el archivo .env principal
     APP_PORT=$((APP_PORT + 1))
+    VITE_PORT=$((VITE_PORT + 1))
     # Verificar si APP_PORT está definido en el archivo .env
     if grep -q "APP_PORT=" $repo_path/.env; then
       # APP_PORT existe, actualizar su valor
       sed -i "s/APP_PORT=.*/APP_PORT=$APP_PORT/" $repo_path/.env
+      sed -i "s/VITE_PORT=.*/VITE_PORT=$VITE_PORT/" $repo_path/.env
     else
       # APP_PORT no existe, agregarlo con el valor predeterminado
       echo "APP_PORT=$APP_PORT" >> $repo_path/.env
+      echo "VITE_PORT=$VITE_PORT" >> $repo_path/.env
     fi
     if grep -q "APP_NAME=" $repo_path/.env; then
       sed -i "s/APP_NAME=.*/APP_NAME=${repo_info[0]}/" $repo_path/.env
@@ -76,19 +79,9 @@ find_and_up_docker_compose() {
     else
       echo "NETWORK=$NETWORK" >> $repo_path/.env
     fi
-    # Comprobar si existe un archivo composer.json en el repositorio
-    if [ -f "${repo_path}/composer.json" ]; then
-      # Comprobar si existe el directorio "vendor"
-      if [ ! -d "${repo_path}/vendor" ]; then
-        echo "El directorio vendor no existe. Ejecutando composer install."
-        # Ejecutar composer install
-        (cd "${repo_path}" && docker-compose run --rm composer install)
-      fi
-    else
-      # Ejecutar docker-compose up
-      echo "Ejecutando docker-compose up en $docker_compose_file."
-      (cd "$repo_path" && docker-compose up -d)
-    fi
+    # Ejecutar docker-compose up
+    echo "Ejecutando docker-compose up en $docker_compose_file."
+    (cd "$repo_path" && docker-compose up composer && ./vendor/bin/sail up -d)
   fi
 }
 
@@ -107,10 +100,6 @@ set +o allexport
 # Crear una red personalizada
 create_custom_network "$NETWORK"
 
-# Ejecuta el docker compose
-echo -e "\033[0;32m[INFO]\033[0m Arrancando los servicios: ${SERVICES[@]}"
-docker compose up -d "$@" "${SERVICES[@]}"
-
 # Loop para recorrer los repositorios
 for repo_url in "${REPOSITORIES[@]}"; do
   repo_info=($(get_repo_vars "$repo_url"))
@@ -118,3 +107,6 @@ for repo_url in "${REPOSITORIES[@]}"; do
   find_and_up_docker_compose
 done
 
+# Ejecuta el docker compose
+echo -e "\033[0;32m[INFO]\033[0m Arrancando los servicios: ${SERVICES[@]}"
+docker compose up -d "$@" "${SERVICES[@]}"
