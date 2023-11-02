@@ -81,7 +81,7 @@ find_and_up_docker_compose() {
     fi
     # Ejecutar docker-compose up
     echo "Ejecutando docker-compose up en $docker_compose_file."
-    (cd "$repo_path" && docker-compose up composer && ./vendor/bin/sail up -d)
+    (cd "$repo_path" && wsl docker-compose up --rm composer && wsl ./vendor/bin/sail up -d)
   fi
 }
 
